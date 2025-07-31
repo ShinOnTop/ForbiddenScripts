@@ -1,1 +1,198 @@
+-- Grow a Garden – Combined GUI Tool (Theme 2: Pastel Bubblegum)
+-- Tools: Pet Age Setter, Pet ESP, Mutation Finder
+-- GUI Style: Soft Pink, Mint Green, Cute Rounded UI
 
+-- Services
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local Workspace = game:GetService("Workspace")
+
+local player = Players.LocalPlayer
+local PlayerGui = player:WaitForChild("PlayerGui")
+
+-- GUI Colors
+local pastelPink = Color3.fromRGB(255, 209, 220)
+local pastelMint = Color3.fromRGB(181, 234, 215)
+local textGray = Color3.fromRGB(68, 68, 68)
+
+-- ScreenGui
+local gui = Instance.new("ScreenGui")
+gui.Name = "GrowGardenTools"
+gui.ResetOnSpawn = false
+gui.IgnoreGuiInset = true
+gui.Parent = PlayerGui
+
+-- Main Frame
+local frame = Instance.new("Frame")
+frame.Size = UDim2.new(0, 310, 0, 280)
+frame.Position = UDim2.new(0.35, 0, 0.3, 0)
+frame.BackgroundColor3 = pastelPink
+frame.BorderSizePixel = 0
+frame.Active = true
+frame.Draggable = true
+frame.Parent = gui
+
+Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 16)
+Instance.new("UIStroke", frame).Color = textGray
+
+-- Tabs Frame
+local tabFrame = Instance.new("Frame")
+tabFrame.Size = UDim2.new(1, 0, 0, 35)
+tabFrame.BackgroundTransparency = 1
+tabFrame.Parent = frame
+
+local contentFrame = Instance.new("Frame")
+contentFrame.Position = UDim2.new(0, 0, 0, 35)
+contentFrame.Size = UDim2.new(1, 0, 1, -35)
+contentFrame.BackgroundTransparency = 1
+contentFrame.Parent = frame
+
+-- Tab Creator
+local function createTab(name, icon, order)
+    local btn = Instance.new("TextButton")
+    btn.Text = icon .. " " .. name
+    btn.Size = UDim2.new(0, 100, 0, 30)
+    btn.Position = UDim2.new(0, 5 + (order * 105), 0, 2)
+    btn.BackgroundColor3 = pastelMint
+    btn.Font = Enum.Font.GothamBold
+    btn.TextColor3 = textGray
+    btn.TextSize = 14
+    btn.AutoButtonColor = false
+    btn.Parent = tabFrame
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 8)
+    return btn
+end
+
+-- Tab Buttons
+local tabs = {
+    Age = createTab("Pet Age", "🍼", 0),
+    ESP = createTab("Pet ESP", "👁", 1),
+    Mutate = createTab("Mutation", "🔬", 2),
+}
+
+-- Clear old UI content
+local function clearContent()
+    for _, child in pairs(contentFrame:GetChildren()) do
+        if not child:IsA("UICorner") then
+            child:Destroy()
+        end
+    end
+end
+
+-- === TAB 1: Pet Age Setter ===
+local function loadPetAgeTab()
+    clearContent()
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(0.8, 0, 0, 40)
+    btn.Position = UDim2.new(0.1, 0, 0.3, 0)
+    btn.BackgroundColor3 = pastelMint
+    btn.Text = "Set Pet Age to 50"
+    btn.Font = Enum.Font.GothamBold
+    btn.TextSize = 16
+    btn.TextColor3 = textGray
+    btn.Parent = contentFrame
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 8)
+
+    btn.MouseButton1Click:Connect(function()
+        local char = player.Character
+        if char then
+            for _, descendant in ipairs(char:GetDescendants()) do
+                if descendant:IsA("NumberValue") and descendant.Name == "Age" then
+                    descendant.Value = 50
+                end
+            end
+        end
+    end)
+end
+
+-- === TAB 2: Pet ESP ===
+local function loadPetESPTab()
+    clearContent()
+
+    local toggle = Instance.new("TextButton")
+    toggle.Size = UDim2.new(0.8, 0, 0, 40)
+    toggle.Position = UDim2.new(0.1, 0, 0.3, 0)
+    toggle.BackgroundColor3 = pastelMint
+    toggle.Text = "Toggle Pet ESP"
+    toggle.Font = Enum.Font.GothamBold
+    toggle.TextSize = 16
+    toggle.TextColor3 = textGray
+    toggle.Parent = contentFrame
+    Instance.new("UICorner", toggle).CornerRadius = UDim.new(0, 8)
+
+    local espEnabled = false
+    local espTags = {}
+
+    toggle.MouseButton1Click:Connect(function()
+        espEnabled = not espEnabled
+        toggle.Text = espEnabled and "ESP: ON" or "ESP: OFF"
+
+        if not espEnabled then
+            for _, tag in pairs(espTags) do tag:Destroy() end
+            espTags = {}
+        else
+            for _, pet in pairs(Workspace:GetDescendants()) do
+                if pet:IsA("Model") and pet:FindFirstChild("PetName") then
+                    local billboard = Instance.new("BillboardGui")
+                    billboard.Size = UDim2.new(0, 100, 0, 20)
+                    billboard.Adornee = pet:FindFirstChild("HumanoidRootPart") or pet.PrimaryPart
+                    billboard.AlwaysOnTop = true
+                    billboard.Parent = pet
+
+                    local label = Instance.new("TextLabel")
+                    label.Size = UDim2.new(1, 0, 1, 0)
+                    label.BackgroundTransparency = 1
+                    label.Text = "🐾 " .. pet.Name
+                    label.TextColor3 = pastelPink
+                    label.Font = Enum.Font.GothamSemibold
+                    label.TextSize = 14
+                    label.Parent = billboard
+
+                    table.insert(espTags, billboard)
+                end
+            end
+        end
+    end)
+end
+
+-- === TAB 3: Mutation Finder ===
+local function loadMutationTab()
+    clearContent()
+
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(0.8, 0, 0, 40)
+    btn.Position = UDim2.new(0.1, 0, 0.3, 0)
+    btn.BackgroundColor3 = pastelMint
+    btn.Text = "Highlight Mutated Pets"
+    btn.Font = Enum.Font.GothamBold
+    btn.TextSize = 16
+    btn.TextColor3 = textGray
+    btn.Parent = contentFrame
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 8)
+
+    btn.MouseButton1Click:Connect(function()
+        for _, pet in pairs(Workspace:GetDescendants()) do
+            if pet:IsA("Model") and pet:FindFirstChild("Mutation") then
+                local mutation = pet:FindFirstChild("Mutation")
+                if mutation:IsA("StringValue") and mutation.Value ~= "None" then
+                    local highlight = Instance.new("Highlight")
+                    highlight.FillColor = pastelPink
+                    highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
+                    highlight.OutlineTransparency = 0
+                    highlight.FillTransparency = 0.5
+                    highlight.Parent = pet
+                end
+            end
+        end
+    end)
+end
+
+-- Tab Bindings
+tabs.Age.MouseButton1Click:Connect(loadPetAgeTab)
+tabs.ESP.MouseButton1Click:Connect(loadPetESPTab)
+tabs.Mutate.MouseButton1Click:Connect(loadMutationTab)
+
+-- Load default tab
+loadPetAgeTab()
